@@ -1,0 +1,105 @@
+import jwt from 'jsonwebtoken';
+
+function isNullOrWhiteSpace(str: string | null | undefined): boolean {
+    if (str === null || str === undefined) {
+        return true;
+    }
+  
+    if (str === 'null' || str === 'undefined') {
+        return true;
+    }
+  
+    if (str.trim().length === 0) {
+        return true;
+    }
+  
+    return false;
+}
+
+function generateRandomID() {
+    let random_string: String = '';
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (let i: number = 0; i < characters.length; i++){
+        random_string += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return random_string.slice(0, 20)+new Date().getTime();
+}
+
+function importEllipticPublicKey(pem: string) {
+    if (!pem.startsWith("-----BEGIN PUBLIC KEY-----")) {
+        pem = "-----BEGIN PUBLIC KEY-----"+pem;
+    }
+    if (!pem.endsWith("-----END PUBLIC KEY-----")) {
+        pem = pem+"-----END PUBLIC KEY-----";
+    }
+    const pemHeader = "-----BEGIN PUBLIC KEY-----";
+    const pemFooter = "-----END PUBLIC KEY-----";
+    const pem_contents = pem.substring(pemHeader.length, pem.length - pemFooter.length);
+    const binaryDerString = atob(pem_contents);
+    const binaryDer = str2ab(binaryDerString);
+  
+    return crypto.subtle.importKey(
+        "spki",
+        binaryDer,
+        {
+            name: "ECDSA",
+            namedCurve: "P-521",
+        },
+        true,
+        ["verify"]
+    );
+}
+  
+function importEllipticPrivateKey(pem: string) {
+    if (!pem.startsWith("-----BEGIN PRIVATE KEY-----")) {
+        pem = "-----BEGIN PRIVATE KEY-----"+pem;
+    }
+    if (!pem.endsWith("-----END PRIVATE KEY-----")) {
+        pem = pem+"-----END PRIVATE KEY-----";
+    }
+    const pemHeader = "-----BEGIN PRIVATE KEY-----";
+    const pemFooter = "-----END PRIVATE KEY-----";
+    const pem_contents = pem.substring(pemHeader.length, pem.length - pemFooter.length);
+    const binaryDerString = atob(pem_contents);
+    const binaryDer = str2ab(binaryDerString);
+  
+    return crypto.subtle.importKey(
+        "pkcs8",
+        binaryDer,
+        {
+            name: "ECDSA",
+            hash: "SHA-256",
+            namedCurve: "P-521"
+        },
+        true,
+        ["sign"]
+    );
+}
+
+function str2ab(str: string) {
+    const buf = new ArrayBuffer(str.length);
+    const bufView = new Uint8Array(buf);
+    for (let i = 0, strLen = str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+}
+
+async function VerifyJWT(jwt_string: string, public_key: string) {
+    if (isNullOrWhiteSpace(jwt_string)) {
+        return "jwt is null.";
+    }
+    if (isNullOrWhiteSpace(public_key)) {
+        throw "public_key is null or whitespace";
+    }
+
+    const publicKeyPem = '-----BEGIN PUBLIC KEY-----\n' +
+`${public_key}\n` +
+'-----END PUBLIC KEY-----\n';
+  
+    const decoded_data = await jwt.verify(jwt_string, publicKeyPem);
+  
+    return { ok: true, data: decoded_data };
+}
+
+export { isNullOrWhiteSpace, generateRandomID, importEllipticPublicKey, importEllipticPrivateKey, VerifyJWT }
