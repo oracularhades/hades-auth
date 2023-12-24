@@ -22,7 +22,7 @@ jobs:
           node-version: 16
       - name: Change directory and npm publish
         run: |
-          cd src/npm  # Change to the desired directory
+          cd npm
           npm ci
           npm publish
 
@@ -37,7 +37,7 @@ jobs:
           registry-url: https://registry.npmjs.org/
       - name: Change directory and npm publish
         run: |
-          cd src/npm  # Change to the desired directory
+          cd npm
           npm ci
           npm publish
         env:
