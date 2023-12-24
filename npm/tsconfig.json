@@ -1,5 +1,9 @@
 {
+  "include": [
+    "src" // Include the directory where your TypeScript files are located
+  ],
   "compilerOptions": {
+    "outDir": "./dist",
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
     /* Projects */
