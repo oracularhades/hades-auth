@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 import { SignJWT, importPKCS8, JWTPayload } from "jose";
 
 function isNullOrWhiteSpace(str: string | null | undefined): boolean {
@@ -86,9 +86,9 @@ function str2ab(str: string) {
     return buf;
 }
 
-async function VerifyJWT(jwt_string: string, public_key: string) {
+async function VerifyJWT(jwt_string: string, public_key: string): Promise<string | JwtPayload> {
     if (isNullOrWhiteSpace(jwt_string)) {
-        return "jwt is null.";
+        throw "jwt is null.";
     }
     if (isNullOrWhiteSpace(public_key)) {
         throw "public_key is null or whitespace";
@@ -98,9 +98,9 @@ async function VerifyJWT(jwt_string: string, public_key: string) {
 `${public_key}\n` +
 '-----END PUBLIC KEY-----\n';
   
-    const decoded_data = await jwt.verify(jwt_string, publicKeyPem);
+    const decoded_data: string | JwtPayload = await jwt.verify(jwt_string, publicKeyPem);
   
-    return { ok: true, data: decoded_data };
+    return decoded_data;
 }
 
 async function signJWT(data: JWTPayload, privateKeyV: string) {

@@ -22,21 +22,6 @@ export default async function fetch_wrapper(url: string, properties: any, device
         paramsObj[key] = value;
     }
 
-    const options = {
-        algorithm: 'ES512',
-        compact: true,
-        fields: { typ: 'JWT' }
-    };
-
-    if (properties) {
-        paramsObj = {
-            ...paramsObj,
-            pathname: pathname
-        }
-
-        paramsObj.deviceid = deviceid;
-    }
-
     let jsonOrForm = null;
     let signed_auth_object = {};
 
@@ -50,6 +35,7 @@ export default async function fetch_wrapper(url: string, properties: any, device
             let bodyObject = {
                 ...body,
                 pathname: pathname,
+                authenticator_JWT_Token: deviceid
             };
 
             properties.headers = {
@@ -71,6 +57,7 @@ export default async function fetch_wrapper(url: string, properties: any, device
             // I don't think this is needed?
             let bodyObject = {
                 pathname: pathname,
+                authenticator_JWT_Token: deviceid
             };
 
             properties.headers = {
@@ -81,26 +68,36 @@ export default async function fetch_wrapper(url: string, properties: any, device
         }
     }
 
-    let signatureInputObject = {
+    let data_to_be_hashed_for_signing = {
         ...paramsObj,
     }
 
     if (jsonOrForm == "FormData") {
-        signatureInputObject = {
-            ...signatureInputObject,
+        data_to_be_hashed_for_signing = {
+            ...data_to_be_hashed_for_signing,
             signed_auth_object: signed_auth_object
         }
 
         properties.body.append("signed_auth_object", signed_auth_object);
     } else if (properties.body && typeof properties.body == "string") {
-        signatureInputObject = {
-            ...signatureInputObject,
+        data_to_be_hashed_for_signing = {
+            ...data_to_be_hashed_for_signing,
             ...JSON.parse(properties.body)
         }
     }
 
-    const token = await sign(signatureInputObject, null, private_key);
-    paramsObj.JWT_Token = token;
+    const token = await sign(data_to_be_hashed_for_signing, new URLSearchParams(paramsObj).toString(), private_key);
+    if (properties.method == "POST") {
+        properties.body = {
+            ...properties.body,
+            authenticator_JWT_Token: token
+        }
+    } else {
+        paramsObj = {
+            ...paramsObj,
+            authenticator_JWT_Token: token
+        }
+    }
 
     let formDataOutput = new URLSearchParams(paramsObj);
 

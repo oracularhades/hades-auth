@@ -1,4 +1,5 @@
 import { signJWT } from "./globals";
+import crypto from 'crypto';
 
 export default async function sign(body: object, params: string | null, private_key: string) {
     let keys: string[] = [];
@@ -19,6 +20,14 @@ export default async function sign(body: object, params: string | null, private_
     await keys.forEach((key) => {
         data[key] = unsorted_data[key];
     });
+
+    const hash = crypto.createHash('sha512');
+    hash.update(JSON.stringify(data));
+    const output_sha512_checksum: string = hash.digest('hex');
+
+    data = {
+        checksum: output_sha512_checksum
+    }
 
     let jwt = await signJWT(data, private_key);
 
