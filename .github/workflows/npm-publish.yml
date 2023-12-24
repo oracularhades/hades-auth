@@ -9,9 +9,8 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
+      - 'src/npm/**'
       - '.github/workflows/**'
-      - '**'
 
 jobs:
   build:
@@ -28,6 +27,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Change directory
+        run: cd npm
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
