@@ -1,4 +1,4 @@
-import { generateRandomID, importEllipticPublicKey, isNullOrWhiteSpace } from "./globals";
+import { generateRandomID, importEllipticPublicKey, isNullOrWhiteSpace } from "./globals.js";
 
 export default async function onboard_new_device(public_key: string) {
     if (isNullOrWhiteSpace(public_key)) {

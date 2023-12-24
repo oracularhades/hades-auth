@@ -1,18 +1,12 @@
-import { JSONorForm } from "./globals";
-import sign from "./sign";
+import { JSONorForm } from "./globals.js";
+import sign from "./sign.js";
 
-export default async function fetch_wrapper(url: string, properties: any, deviceid: string, private_key: string, react_native_compatability: boolean) {
+export default async function fetch_wrapper(url: string, properties: any, deviceid: string, private_key: string) {
     if (!url) {
         throw `url is ${url}`;
     }
 
-    let urlData = null;
-    if (react_native_compatability == true) {
-        const { URL: React_Url, URLSearchParams: React_URLSearchParams } = require("react-native-url-polyfill");
-        urlData = new React_Url(url);
-    } else {
-        urlData = new URL(url);
-    }
+    let urlData = new URL(url);
     
     const pathname = urlData.pathname;
     const searchParams = urlData.searchParams;
@@ -25,6 +19,7 @@ export default async function fetch_wrapper(url: string, properties: any, device
     let jsonOrForm = null;
     let signed_auth_object = {};
 
+    // Logic for if the method is a POST request.
     if (properties && properties.method && properties.method.toLowerCase() == "post") {
         const jsonOrFormV = await JSONorForm(properties.body);
 
@@ -34,8 +29,7 @@ export default async function fetch_wrapper(url: string, properties: any, device
             const body = JSON.parse(properties.body);
             let bodyObject = {
                 ...body,
-                pathname: pathname,
-                authenticator_JWT_Token: deviceid
+                pathname: pathname
             };
 
             properties.headers = {
@@ -56,8 +50,7 @@ export default async function fetch_wrapper(url: string, properties: any, device
         } else {
             // I don't think this is needed?
             let bodyObject = {
-                pathname: pathname,
-                authenticator_JWT_Token: deviceid
+                pathname: pathname
             };
 
             properties.headers = {
@@ -70,20 +63,8 @@ export default async function fetch_wrapper(url: string, properties: any, device
 
     let data_to_be_hashed_for_signing = {
         ...paramsObj,
-    }
-
-    if (jsonOrForm == "FormData") {
-        data_to_be_hashed_for_signing = {
-            ...data_to_be_hashed_for_signing,
-            signed_auth_object: signed_auth_object
-        }
-
-        properties.body.append("signed_auth_object", signed_auth_object);
-    } else if (properties.body && typeof properties.body == "string") {
-        data_to_be_hashed_for_signing = {
-            ...data_to_be_hashed_for_signing,
-            ...JSON.parse(properties.body)
-        }
+        deviceid: deviceid,
+        pathname: pathname
     }
 
     const token = await sign(data_to_be_hashed_for_signing, new URLSearchParams(paramsObj).toString(), private_key);
@@ -95,7 +76,9 @@ export default async function fetch_wrapper(url: string, properties: any, device
     } else {
         paramsObj = {
             ...paramsObj,
-            authenticator_JWT_Token: token
+            authenticator_JWT_Token: token,
+            deviceid: deviceid,
+            pathname: pathname
         }
     }
 

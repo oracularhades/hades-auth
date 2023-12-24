@@ -1,4 +1,4 @@
-import { signJWT } from "./globals";
+import { signJWT } from "./globals.js";
 import crypto from 'crypto';
 
 export default async function sign(body: object, params: string | null, private_key: string) {
@@ -24,6 +24,8 @@ export default async function sign(body: object, params: string | null, private_
     const hash = crypto.createHash('sha512');
     hash.update(JSON.stringify(data));
     const output_sha512_checksum: string = hash.digest('hex');
+
+    console.log("OUTPUT CHECKSUM", output_sha512_checksum, "OUTPUT DATA", JSON.stringify(data));
 
     data = {
         checksum: output_sha512_checksum

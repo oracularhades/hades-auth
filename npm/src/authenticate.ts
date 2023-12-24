@@ -1,4 +1,4 @@
-import { VerifyJWT, isNullOrWhiteSpace } from "./globals";
+import { VerifyJWT, isNullOrWhiteSpace } from "./globals.js";
 import crypto from 'crypto';
 
 async function authenticate(body: object, params: string, jwt: string, public_key: string, pathname: string, filebuffer: string) {
