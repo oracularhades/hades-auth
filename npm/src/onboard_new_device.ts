@@ -16,9 +16,9 @@ ${public_key}
     if (!publickeyimport.algorithm || publickeyimport.algorithm.name != "ECDSA") {
         throw "Algorithm name must be ECDSA";
     }
-    if (!publickeyimport.algorithm || publickeyimport.algorithm.namedCurve != "P-521") {
-        throw "namedCurve must be P-521.";
-    }
+    // if (!publickeyimport.algorithm || publickeyimport.algorithm.namedCurve != "P-521") {
+    //     throw "namedCurve must be P-521.";
+    // }
     if (publickeyimport.type != "public") {
         throw "Key type MUST be public key. It is extremely insecure to surrender your private authentication key. You should consider the provided RSA key compromised, please generate a new key.";
     }

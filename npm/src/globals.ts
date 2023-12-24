@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { SignJWT, importPKCS8, JWTPayload } from "jose";
 
 function isNullOrWhiteSpace(str: string | null | undefined): boolean {
     if (str === null || str === undefined) {
@@ -102,4 +103,24 @@ async function VerifyJWT(jwt_string: string, public_key: string) {
     return { ok: true, data: decoded_data };
 }
 
-export { isNullOrWhiteSpace, generateRandomID, importEllipticPublicKey, importEllipticPrivateKey, VerifyJWT }
+async function signJWT(data: JWTPayload, privateKeyV: string) {
+    const options = {
+        algorithm: 'ES512',
+        compact: true,
+        fields: { typ: 'JWT' }
+    };
+
+    const privateKeyPem = '-----BEGIN PRIVATE KEY-----\n' +
+`${privateKeyV.replace("-----BEGIN PRIVATE KEY-----", "").replace("-----END PRIVATE KEY-----", "")}\n` +
+'-----END PRIVATE KEY-----\n';
+
+    const privateKey = await importPKCS8(privateKeyPem, "ES512");
+
+    const jwt = await new SignJWT(data) // ECDSA with P-521 curve
+    .setProtectedHeader({ alg: 'ES512' }) // Optional if you want to specify headers
+    .sign(privateKey);
+    
+    return jwt;
+}
+
+export { isNullOrWhiteSpace, generateRandomID, importEllipticPublicKey, importEllipticPrivateKey, signJWT, VerifyJWT }
