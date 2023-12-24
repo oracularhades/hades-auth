@@ -20,21 +20,25 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: cd npm
-      - run: npm ci
-      - run: npm test
+      - name: Change directory and npm publish
+        run: |
+          cd src/npm  # Change to the desired directory
+          npm ci
+          npm publish
 
   publish-npm:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - run: cd npm
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 16
           registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm publish
+      - name: Change directory and npm publish
+        run: |
+          cd src/npm  # Change to the desired directory
+          npm ci
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.npm_token}}
