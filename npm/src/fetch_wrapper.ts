@@ -1,4 +1,5 @@
 import { JSONorForm } from "./globals";
+import sign from "./sign";
 
 export default async function fetch_wrapper(url: string, properties: any, deviceid: string, private_key: string, react_native_compatability: boolean) {
     if (!url) {
@@ -98,7 +99,7 @@ export default async function fetch_wrapper(url: string, properties: any, device
         }
     }
 
-    const token = await general().signJWT(await general().sortedObject(signatureInputObject), private_key, options);
+    const token = await sign(signatureInputObject, null, private_key);
     paramsObj.JWT_Token = token;
 
     let formDataOutput = new URLSearchParams(paramsObj);

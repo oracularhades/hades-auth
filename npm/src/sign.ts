@@ -1,10 +1,13 @@
 import { signJWT } from "./globals";
 
-export default async function sign(body: object, params: string, private_key: string) {
+export default async function sign(body: object, params: string | null, private_key: string) {
     let keys: string[] = [];
     let unsorted_data: { [key: string]: any } = {};
 
-    let params_object: object = Object.fromEntries(new URLSearchParams(params));
+    let params_object: object = {};
+    if (params) {
+        params_object = Object.fromEntries(new URLSearchParams(params))
+    }
 
     unsorted_data = {
         ...params_object,
