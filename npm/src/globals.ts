@@ -123,4 +123,19 @@ async function signJWT(data: JWTPayload, privateKeyV: string) {
     return jwt;
 }
 
-export { isNullOrWhiteSpace, generateRandomID, importEllipticPublicKey, importEllipticPrivateKey, signJWT, VerifyJWT }
+async function JSONorForm(variable: any) {
+    if (variable instanceof FormData) {
+        return 'FormData';
+    }
+
+    // Check if it's JSON
+    try {
+        JSON.parse(JSON.stringify(variable));
+        return 'JSON';
+    } catch (error) {
+    }
+    
+    return null;
+}
+
+export { isNullOrWhiteSpace, generateRandomID, importEllipticPublicKey, importEllipticPrivateKey, signJWT, VerifyJWT, JSONorForm }

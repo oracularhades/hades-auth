@@ -1,3 +1,5 @@
+import { JSONorForm } from "./globals";
+
 export default async function fetch_wrapper(url: string, properties: any, deviceid: string, private_key: string, react_native_compatability: boolean) {
     if (!url) {
         throw `url is ${url}`;
@@ -14,7 +16,7 @@ export default async function fetch_wrapper(url: string, properties: any, device
     const pathname = urlData.pathname;
     const searchParams = urlData.searchParams;
     // Convert the search parameters to an object
-    let paramsObj: object = {};
+    let paramsObj: { [key: string]: any } = {};
     for (const [key, value] of searchParams.entries()) {
         paramsObj[key] = value;
     }
@@ -38,7 +40,7 @@ export default async function fetch_wrapper(url: string, properties: any, device
     let signed_auth_object = {};
 
     if (properties && properties.method && properties.method.toLowerCase() == "post") {
-        const jsonOrFormV = await MotionFans().general().JSONorForm(properties.body);
+        const jsonOrFormV = await JSONorForm(properties.body);
 
         jsonOrForm = jsonOrFormV;
 
@@ -55,14 +57,15 @@ export default async function fetch_wrapper(url: string, properties: any, device
             }
             properties.body = JSON.stringify(bodyObject);
         } else if (jsonOrForm == "FormData") {
-            const hashData = new TextEncoder().encode(Buffer.from(await internal().getFileBinary(await properties.body.get("file"))));
-            const hashBuffer = await crypto.subtle.digest("SHA-256", hashData);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+            throw "Cannot do formdata right now.";
+            // const hashData = new TextEncoder().encode(Buffer.from(await internal().getFileBinary(await properties.body.get("file"))));
+            // const hashBuffer = await crypto.subtle.digest("SHA-256", hashData);
+            // const hashArray = Array.from(new Uint8Array(hashBuffer));
+            // const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
 
-            signed_auth_object = JSON.stringify({
-                hash: hashHex
-            })
+            // signed_auth_object = JSON.stringify({
+            //     hash: hashHex
+            // })
         } else {
             // I don't think this is needed?
             let bodyObject = {
