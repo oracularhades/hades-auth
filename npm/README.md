@@ -10,7 +10,7 @@ If your database is leaked, with session keys / bearer tokens, it comes down to 
 ```
 import { generate_credentials } from "hades-auth";
 
-const credentials = await onboard_new_device();
+const credentials = await generate_credentials();
 
 // credentials.private_key - Store this locally and **NEVER** allow it to leave the device. Avoid storing it in cookies, because cookies, in some configurations, are sent to the server by your browser, and you need to make sure that doesn't happen.
 
