@@ -6,7 +6,7 @@ export default async function sign(body: object, params: string | null, private_
     let unsorted_data: { [key: string]: any } = {};
 
     let params_object: object = {};
-    if (params) {
+    if (params && params.length > 0) {
         params_object = Object.fromEntries(new URLSearchParams(params))
     }
 

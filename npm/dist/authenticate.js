@@ -59,7 +59,6 @@ async function authenticate(body, params, jwt, public_key, pathname, filebuffer)
     const hash = crypto.createHash('sha512');
     hash.update(JSON.stringify(data));
     const output_sha512_for_unverified_data = hash.digest('hex');
-    console.log("AUTHED CHECKSUM", sha512_authed_checksum, "OUTPUT CHECKSUM", output_sha512_for_unverified_data, "OUTPUT DATA", JSON.stringify(data));
     if (sha512_authed_checksum != output_sha512_for_unverified_data) {
         // data object does not match checksum in JWT.
         throw "Incoming data does not match checksum in JWT packet.";

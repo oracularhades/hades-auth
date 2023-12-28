@@ -17,26 +17,21 @@ export default async function fetch_wrapper(url: string, properties: any, device
     }
 
     let jsonOrForm = null;
-    let signed_auth_object = {};
 
     // Logic for if the method is a POST request.
-    if (properties && properties.method && properties.method.toLowerCase() == "post") {
+    if (properties && properties.body && properties.method && properties.method.toLowerCase() == "post") {
         const jsonOrFormV = await JSONorForm(properties.body);
 
         jsonOrForm = jsonOrFormV;
 
         if (jsonOrForm == "JSON") {
             const body = JSON.parse(properties.body);
-            let bodyObject = {
-                ...body,
-                pathname: pathname
-            };
 
             properties.headers = {
                 ...properties.headers,
                 "Content-Type": "application/json"
             }
-            properties.body = JSON.stringify(bodyObject);
+            properties.body = body;
         } else if (jsonOrForm == "FormData") {
             throw "Cannot do formdata right now.";
             // const hashData = new TextEncoder().encode(Buffer.from(await internal().getFileBinary(await properties.body.get("file"))));
@@ -47,38 +42,38 @@ export default async function fetch_wrapper(url: string, properties: any, device
             // signed_auth_object = JSON.stringify({
             //     hash: hashHex
             // })
-        } else {
-            // I don't think this is needed?
-            let bodyObject = {
-                pathname: pathname
-            };
-
-            properties.headers = {
-                ...properties.headers,
-                "Content-Type": "application/json"
-            }
-            properties.body = JSON.stringify(bodyObject);
         }
+    }
+
+    let addon = {
+        deviceid: deviceid,
+        authenticator_pathname: pathname
     }
 
     let data_to_be_hashed_for_signing = {
         ...paramsObj,
-        deviceid: deviceid,
-        pathname: pathname
+        ...addon
+    }
+
+    if (properties.body) {
+        data_to_be_hashed_for_signing = {
+            ...data_to_be_hashed_for_signing,
+            ...properties.body
+        }
     }
 
     const token = await sign(data_to_be_hashed_for_signing, new URLSearchParams(paramsObj).toString(), private_key);
     if (properties.method == "POST") {
-        properties.body = {
+        properties.body = JSON.stringify({
             ...properties.body,
+            ...addon,
             authenticator_JWT_Token: token
-        }
+        });
     } else {
         paramsObj = {
             ...paramsObj,
-            authenticator_JWT_Token: token,
-            deviceid: deviceid,
-            pathname: pathname
+            ...addon,
+            authenticator_JWT_Token: token
         }
     }
 

@@ -13,9 +13,8 @@ export default async function fetch_wrapper(url, properties, deviceid, private_k
         paramsObj[key] = value;
     }
     let jsonOrForm = null;
-    let signed_auth_object = {};
     // Logic for if the method is a POST request.
-    if (properties && properties.method && properties.method.toLowerCase() == "post") {
+    if (properties && properties.body && properties.method && properties.method.toLowerCase() == "post") {
         const jsonOrFormV = await JSONorForm(properties.body);
         jsonOrForm = jsonOrFormV;
         if (jsonOrForm == "JSON") {
@@ -28,7 +27,7 @@ export default async function fetch_wrapper(url, properties, deviceid, private_k
                 ...properties.headers,
                 "Content-Type": "application/json"
             };
-            properties.body = JSON.stringify(bodyObject);
+            properties.body = bodyObject; // Normally we'd JSON.stringify here for compatability with fetch, but that'll happen further down.
         }
         else if (jsonOrForm == "FormData") {
             throw "Cannot do formdata right now.";
@@ -52,24 +51,33 @@ export default async function fetch_wrapper(url, properties, deviceid, private_k
             properties.body = JSON.stringify(bodyObject);
         }
     }
-    let data_to_be_hashed_for_signing = {
-        ...paramsObj,
+    let addon = {
         deviceid: deviceid,
         pathname: pathname
     };
+    let data_to_be_hashed_for_signing = {
+        ...paramsObj,
+        ...addon
+    };
+    if (properties.body) {
+        data_to_be_hashed_for_signing = {
+            ...data_to_be_hashed_for_signing,
+            ...properties.body
+        };
+    }
     const token = await sign(data_to_be_hashed_for_signing, new URLSearchParams(paramsObj).toString(), private_key);
     if (properties.method == "POST") {
-        properties.body = {
+        properties.body = JSON.stringify({
             ...properties.body,
+            ...addon,
             authenticator_JWT_Token: token
-        };
+        });
     }
     else {
         paramsObj = {
             ...paramsObj,
-            authenticator_JWT_Token: token,
-            deviceid: deviceid,
-            pathname: pathname
+            ...addon,
+            authenticator_JWT_Token: token
         };
     }
     let formDataOutput = new URLSearchParams(paramsObj);
