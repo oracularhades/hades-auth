@@ -23,7 +23,10 @@ async function authenticate(body, params, jwt, public_key, pathname, filebuffer)
     // }
     let keys = [];
     let unsorted_data = {};
-    let params_object = Object.fromEntries(new URLSearchParams(params));
+    let params_object = {};
+    if (params.length > 0) {
+        params_object = Object.fromEntries(new URLSearchParams(params));
+    }
     unsorted_data = {
         ...params_object,
         ...body
@@ -40,12 +43,11 @@ async function authenticate(body, params, jwt, public_key, pathname, filebuffer)
         throw "JWT is null or whitespace.";
     }
     // Check the pathname inside the signed-object, it needs to match the current pathname, this makes it more annoying for attackers to re-play signed packets. Such as if 2 API endpoints use similar properties, it's locked to the API endpoint is was signed for.
-    const data_pathname = data.pathname;
-    if (isNullOrWhiteSpace(data_pathname)) {
-        throw "signedObject.pathname is null or whitespace.";
-    }
-    if (data_pathname != pathname) {
-        throw `Signed URL is "${data_pathname}" and does not match "${pathname}"`;
+    const data_pathname = data.authenticator_pathname;
+    if (!isNullOrWhiteSpace(data_pathname)) {
+        if (data_pathname != pathname) {
+            throw `Signed URL is "${data_pathname}" and does not match "${pathname}"`;
+        }
     }
     const verify_jwt_status = await VerifyJWT(jwt, public_key); // an error will throw here if the request is unauthorized.
     let sha512_authed_checksum = '';

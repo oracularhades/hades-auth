@@ -19,15 +19,11 @@ export default async function fetch_wrapper(url, properties, deviceid, private_k
         jsonOrForm = jsonOrFormV;
         if (jsonOrForm == "JSON") {
             const body = JSON.parse(properties.body);
-            let bodyObject = {
-                ...body,
-                pathname: pathname
-            };
             properties.headers = {
                 ...properties.headers,
                 "Content-Type": "application/json"
             };
-            properties.body = bodyObject; // Normally we'd JSON.stringify here for compatability with fetch, but that'll happen further down.
+            properties.body = body;
         }
         else if (jsonOrForm == "FormData") {
             throw "Cannot do formdata right now.";
@@ -39,21 +35,10 @@ export default async function fetch_wrapper(url, properties, deviceid, private_k
             //     hash: hashHex
             // })
         }
-        else {
-            // I don't think this is needed?
-            let bodyObject = {
-                pathname: pathname
-            };
-            properties.headers = {
-                ...properties.headers,
-                "Content-Type": "application/json"
-            };
-            properties.body = JSON.stringify(bodyObject);
-        }
     }
     let addon = {
         deviceid: deviceid,
-        pathname: pathname
+        authenticator_pathname: pathname
     };
     let data_to_be_hashed_for_signing = {
         ...paramsObj,
