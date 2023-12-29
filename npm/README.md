@@ -39,8 +39,15 @@ try {
 ```
 import { fetch_wrapper } from "hades-auth";
 
+let device_id = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+// Normally you'd get this from local storage or elsewhere.
+let private_key = `-----BEGIN PRIVATE KEY-----
+MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAvH5WytTrfNHtfmJ0heMDotHBQXFR7jYx1rAZYpa0fNJcDeYIMV+mUjM/9ujMK4aaqwaxN1Viw2Ku/zlfKCJj3O2hgYkDgYYABADAKAtlhXvMXArHWxDt3IrUoVFndTyCjiSyteJwSVvd5VLr1hXVTZ9VJHOpSxq+Ght2LWaqIBShQfT4th/vzroypgBNSnkf+dH1bqiSaT01tznAoKwSqfxBgdRspJxCmYd87ukf/KB/INrZ7XX+4/pAT9Q8NqQEctS/DHrg/dRIUyEmNg==
+-----END PRIVATE KEY-----`;
+
 // pstttt, if you're using expressjs with JSON parsing middleware, you need to set "Content-Type" to be "application/json" when sending JSON, otherwise it errors and thinks there is an empty body. A little annoying quirk of expressjs.
-const response = await Clubs(await getCreds()).fetch_wrapper(`https://example.com`, {
+const response = fetch_wrapper(`https://example.com`, {
     method: 'POST',
     mode: 'cors',
     cache: 'default',
@@ -51,20 +58,40 @@ const response = await Clubs(await getCreds()).fetch_wrapper(`https://example.co
         name: "John Doe"
     }),
     redirect: 'error',
-})
+}device_id, private_key)
 ```
 
 # Sign data (client-side)
 ```
 import { sign } from "hades-auth";
 
-let body = {
-    name: "John Doe"
+let metadata = {
+    deviceid: ''
+    // whatever you want here!
 }
-let params = new URLSearchParams(); // Don't panic about params! If you're not planning on sending data in traditional means, such as an HTTPS request, you can leave this as an empty string and just use the body param.
-let private_key = "";
 
-const jwt = await sign(body, params.toString(), private_key);
+// You should think of metadata like URL params and the body object as well...a body. They're seperate because metadata is _always_ json, which makes it easy to pass something like an image in the body and not need to mold additional data like the deviceid into that formdata. They're seperate because data formatting can get quite messy and it's absolutely better to have the 2 seperate values. Here are some example bodies, but you can use what you want!
+
+let formData = new FormData();
+formData.set("a", "1");
+formData.set("b", "2");
+formData.set("c", "3");
+let body = formData.toString();
+
+let body1 = {
+    a: "1",
+    b: "2",
+    c: "3"
+}
+
+let body3 = "SSB3YW50ZWQgdG8gcHV0IGFuIGltYWdlIG9yIGEgcXVvdGUgaGVyZSwgYnV0IGJvdGggc3RyaW5ncyB3b3VsZCBoYXZlIGJlZW4gdG9vIGxvbmcuIEFueXdheSwgbmljZSB0byBzZWUgeW91J3JlIGVuam95aW5nIHRoZSBjb2RlYmFzZSBlbm91Z2ggdG8gcGVhayBiZWhpbmQgdGhlIGN1cnRhaW4gOik=";
+
+// Normally you'd get this from local storage or elsewhere.
+let private_key = `-----BEGIN PRIVATE KEY-----
+MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAvH5WytTrfNHtfmJ0heMDotHBQXFR7jYx1rAZYpa0fNJcDeYIMV+mUjM/9ujMK4aaqwaxN1Viw2Ku/zlfKCJj3O2hgYkDgYYABADAKAtlhXvMXArHWxDt3IrUoVFndTyCjiSyteJwSVvd5VLr1hXVTZ9VJHOpSxq+Ght2LWaqIBShQfT4th/vzroypgBNSnkf+dH1bqiSaT01tznAoKwSqfxBgdRspJxCmYd87ukf/KB/INrZ7XX+4/pAT9Q8NqQEctS/DHrg/dRIUyEmNg==
+-----END PRIVATE KEY-----`;
+
+const jwt = await sign(metadata, body, private_key);
 
 // Send this JWT to your server.
 ```
@@ -75,7 +102,11 @@ import { authenticate } from "hades-auth";
 
 let body = // get incoming body from your webserver as an object (not a JSON string).
 let params = new URLSearchParams(); // Don't panic about params! If you're not planning on sending data in traditional means, such as an HTTPS request, you can leave this as an empty string and just use the body param.
-let private_key = "";
+
+// Normally you'd get this from local storage or elsewhere.
+let private_key = `-----BEGIN PRIVATE KEY-----
+MIHuAgEAMBAGByqGSM49AgEGBSuBBAAjBIHWMIHTAgEBBEIAvH5WytTrfNHtfmJ0heMDotHBQXFR7jYx1rAZYpa0fNJcDeYIMV+mUjM/9ujMK4aaqwaxN1Viw2Ku/zlfKCJj3O2hgYkDgYYABADAKAtlhXvMXArHWxDt3IrUoVFndTyCjiSyteJwSVvd5VLr1hXVTZ9VJHOpSxq+Ght2LWaqIBShQfT4th/vzroypgBNSnkf+dH1bqiSaT01tznAoKwSqfxBgdRspJxCmYd87ukf/KB/INrZ7XX+4/pAT9Q8NqQEctS/DHrg/dRIUyEmNg==
+-----END PRIVATE KEY-----`;
 let pathname = // get pathname from your webserver. Hint: If you're using expressjs, it's req.path :)
 
 // body: the incoming body of your request, as an object (not a json string).
