@@ -104,4 +104,37 @@ async function JSONorForm(variable) {
     }
     return null;
 }
-export { isNullOrWhiteSpace, generateRandomID, importEllipticPublicKey, importEllipticPrivateKey, signJWT, VerifyJWT, JSONorForm };
+async function get_file_binary(file) {
+    return new Promise((resolve, reject) => {
+        if (typeof window === 'undefined' && typeof process === 'object') { // Check if running in Node.js
+            const data = file instanceof Buffer ? file.toString('binary') : file;
+            resolve(data);
+        }
+        else if (typeof window === 'undefined') { // Check if running in a browser
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (reader.result instanceof ArrayBuffer) {
+                    const arrayBuffer = new Uint8Array(reader.result);
+                    const binaryString = arrayBuffer.reduce((data, byte) => {
+                        return data + String.fromCharCode(byte);
+                    }, '');
+                    resolve(binaryString);
+                }
+                else if (typeof reader.result === 'string' || reader.result === null) {
+                    resolve(reader.result || ''); // Resolve with an empty string if null
+                }
+                else {
+                    reject(new Error('Failed to read file content.'));
+                }
+            };
+            reader.onerror = (error) => {
+                reject(error);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        else {
+            reject(new Error('FileReader is not supported in this environment.'));
+        }
+    });
+}
+export { isNullOrWhiteSpace, generateRandomID, importEllipticPublicKey, importEllipticPrivateKey, signJWT, VerifyJWT, JSONorForm, get_file_binary };

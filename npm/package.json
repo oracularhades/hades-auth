@@ -1,6 +1,6 @@
 {
   "name": "hades-auth",
-  "version": "1.0.26",
+  "version": "1.0.34",
   "description": "",
   "main": "dist/index.js",
   "type": "module",

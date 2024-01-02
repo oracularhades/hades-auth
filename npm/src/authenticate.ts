@@ -1,31 +1,7 @@
-import { VerifyJWT, isNullOrWhiteSpace } from "./globals.js";
+import { VerifyJWT, get_file_binary, isNullOrWhiteSpace } from "./globals.js";
 import crypto from 'crypto';
 
 async function authenticate(body: object, params: string, jwt: string, public_key: string, pathname: string, filebuffer: string) {
-    // if (filebuffer) {
-    //     let obj = req.body;
-    //     if (!obj || !obj.signed_auth_object) {
-    //         throw "Your request is formdata and missing body.signed_auth_object";
-    //     }
-
-    //     let signed_auth_object = null;
-    //     try {
-    //         signed_auth_object = JSON.parse(req.body.signed_auth_object);
-    //     } catch {
-    //         throw "signed_auth_object is not an object.";
-    //     }
-
-    //     const hashData = new TextEncoder().encode(Buffer.from(filebuffer));
-    //     const hashBuffer = await crypto.subtle.digest("SHA-256", hashData);
-    //     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    //     const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-
-    //     if (hashHex != signed_auth_object.hash) {
-    //         console.log("DOESN'T MATCH", hashHex, signed_auth_object.hash);
-    //         throw "Hash in signed_auth_object and hash for provided formdata file does not match. (Your hash should be in hex)";
-    //     }
-    // }
-
     let keys: string[] = [];
     let unsorted_data: { [key: string]: any } = {};
 
@@ -35,8 +11,7 @@ async function authenticate(body: object, params: string, jwt: string, public_ke
     }
 
     unsorted_data = {
-        ...params_object,
-        ...body
+        ...params_object
     };
     keys = Object.keys(unsorted_data).sort();
 
@@ -63,20 +38,46 @@ async function authenticate(body: object, params: string, jwt: string, public_ke
     const verify_jwt_status = await VerifyJWT(jwt, public_key); // an error will throw here if the request is unauthorized.
 
     let sha512_authed_checksum: string = '';
+    let body_sha512_authed_checksum: string = '';
     if (typeof verify_jwt_status === 'string') {
         throw "VerifyJWT output was a string for some reason.";
     } else {
         const sha512_authed_checksum_v: string = verify_jwt_status.checksum.toString();
         sha512_authed_checksum = sha512_authed_checksum_v;
+
+        if (verify_jwt_status.body_checksum) {
+            const body_sha512_authed_checksum_v: string = verify_jwt_status.body_checksum.toString();
+            body_sha512_authed_checksum = body_sha512_authed_checksum_v;
+        }
     }
+
+    console.log("DATAAA444", JSON.stringify(data));
 
     const hash = crypto.createHash('sha512');
     hash.update(JSON.stringify(data));
     const output_sha512_for_unverified_data: string = hash.digest('hex');
-
+    // console.log("DATAAA444 sig", JSON.stringify(data));
     if (sha512_authed_checksum != output_sha512_for_unverified_data) {
         // data object does not match checksum in JWT.
         throw "Incoming data does not match checksum in JWT packet.";
+    }
+
+    console.log(body);
+
+    if (body && Object.keys(body).length > 0) {
+        if (!body_sha512_authed_checksum) {
+            throw "Body was provided, however, jwt.body_checksum is not specified.";
+        }
+    
+        const hashData = new TextEncoder().encode(await get_file_binary(body));
+        const hashBuffer = await crypto.subtle.digest("SHA-512", hashData);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+
+        if (body_sha512_authed_checksum != hashHex) {
+            // body does not match checksum in JWT.
+            throw "Incoming body data does not match checksum in JWT packet.";
+        }
     }
 
     return true;
