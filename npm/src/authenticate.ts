@@ -46,12 +46,9 @@ async function authenticate(body: object, params: string, jwt: string, public_ke
         sha512_authed_checksum = sha512_authed_checksum_v;
 
         if (verify_jwt_status.body_checksum) {
-            const body_sha512_authed_checksum_v: string = verify_jwt_status.body_checksum.toString();
-            body_sha512_authed_checksum = body_sha512_authed_checksum_v;
+            body_sha512_authed_checksum = verify_jwt_status.body_checksum.toString();
         }
     }
-
-    console.log("DATAAA444", JSON.stringify(data));
 
     const hash = crypto.createHash('sha512');
     hash.update(JSON.stringify(data));
@@ -61,8 +58,6 @@ async function authenticate(body: object, params: string, jwt: string, public_ke
         // data object does not match checksum in JWT.
         throw "Incoming data does not match checksum in JWT packet.";
     }
-
-    console.log(body);
 
     if (body && Object.keys(body).length > 0) {
         if (!body_sha512_authed_checksum) {

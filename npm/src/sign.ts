@@ -13,7 +13,14 @@ export default async function sign(metadata: object, body: object | null, privat
     let hashHex = null;
     if (body && Object.keys(body).length > 0) {
         const hashData = new TextEncoder().encode(await get_file_binary(body));
-        const hashBuffer = await crypto.subtle.digest("SHA-512", hashData);
+        let hashBuffer = null;
+        if (typeof window === 'undefined' && typeof process === 'object') {
+            hashBuffer = await crypto.subtle.digest("SHA-512", hashData);
+        } else if (typeof window !== 'undefined') {
+            hashBuffer = hashBuffer = await window.crypto.subtle.digest("SHA-512", hashData);
+        } else {
+            throw 'FileReader is not supported in this environment.';
+        }
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
 
@@ -28,8 +35,6 @@ export default async function sign(metadata: object, body: object | null, privat
     await keys.forEach((key) => {
         data[key] = unsorted_data[key];
     });
-
-    console.log("SIGN", JSON.stringify(data));
 
     const hash = crypto.createHash('sha512');
     hash.update(JSON.stringify(data));

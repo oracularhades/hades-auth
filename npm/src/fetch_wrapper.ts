@@ -7,7 +7,7 @@ export default async function fetch_wrapper(url: string, properties: any, device
     }
 
     let urlData = new URL(url);
-    
+
     const pathname = urlData.pathname;
     const searchParams = urlData.searchParams;
     // Convert the search parameters to an object
@@ -37,7 +37,8 @@ export default async function fetch_wrapper(url: string, properties: any, device
     }
 
     if (properties && properties.body && properties.method && properties.method.toLowerCase() == "post") {
-        token = await sign(data_to_be_hashed_for_signing, properties.body, private_key);
+        // Gotta JSON.parse the body. Otherwise it comes out as a string, and the other end reads it as an object.
+        token = await sign(data_to_be_hashed_for_signing, JSON.parse(properties.body), private_key);
     } else {
         token = await sign(data_to_be_hashed_for_signing, {}, private_key);
     }
@@ -53,8 +54,6 @@ export default async function fetch_wrapper(url: string, properties: any, device
     if (formDataOutput.toString() && formDataOutput.toString().length > 0) {
         outputUrl = outputUrl+"?"+formDataOutput.toString();
     }
-
-    console.log("OUTPUT URL", outputUrl);
 
     return await fetch(outputUrl, properties);
 }
