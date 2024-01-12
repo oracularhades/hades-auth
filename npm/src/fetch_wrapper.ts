@@ -38,7 +38,11 @@ export default async function fetch_wrapper(url: string, properties: any, device
 
     if (properties && properties.body && properties.method && properties.method.toLowerCase() == "post") {
         // Gotta JSON.parse the body. Otherwise it comes out as a string, and the other end reads it as an object.
-        token = await sign(data_to_be_hashed_for_signing, JSON.parse(properties.body), private_key);
+        let output = properties.body;
+        if (jsonOrForm == "JSON") {
+            output = JSON.parse(properties.body);
+        }
+        token = await sign(data_to_be_hashed_for_signing, output, private_key);
     } else {
         token = await sign(data_to_be_hashed_for_signing, {}, private_key);
     }
