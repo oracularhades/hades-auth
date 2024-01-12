@@ -138,4 +138,15 @@ async function JSONorForm(variable: any) {
     return null;
 }
 
-export { isNullOrWhiteSpace, generateRandomID, importEllipticPublicKey, importEllipticPrivateKey, signJWT, VerifyJWT, JSONorForm }
+async function get_file_binary(file: any): Promise<string> {
+    return new Promise((resolve, reject) => {
+        // if (typeof window === 'undefined' && typeof process === 'object') { // Check if running in Node.js
+            const data = file instanceof Buffer ? file.toString('binary') : file;
+            resolve(data);
+        // } else {
+        //     reject(new Error('FileReader is not supported in this environment.'));
+        // }
+    });
+}
+
+export { isNullOrWhiteSpace, generateRandomID, importEllipticPublicKey, importEllipticPrivateKey, signJWT, VerifyJWT, JSONorForm, get_file_binary }
