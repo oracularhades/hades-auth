@@ -1,5 +1,5 @@
 # About
-Authentication libraries are typically very messy. Usually they're terrible to start off with, too cramped and don't solve a problem enough to be worth using. Most developers resort to session keys / bearer tokens because it's the easiest. This library aims to change that by making public / private key signing authentication easier than session / bearer tokens.
+Authentication libraries are typically very messy, usually they're terrible to start off with, too cramped and don't solve a problem enough to be worth using. Most developers resort to session keys / bearer tokens because it's the easiest. This library aims to change that by making public / private key signing authentication easier than session / bearer tokens.
 
 **Why should I be using public/private key signing for authentication?**
 Session keys / bearer tokens are weak because if someone intercepts them, they can use them. With public / private key signing and correct implementation, if someone were to intercept your request, they would only to be able to resend the request you just signed (and that can be stopped with nonces and signing) and can't use the authentication for whatever they want. With session / bearer tokens, if someone intercepts your request, they can take that token and use it to the full extent it's authorized.
