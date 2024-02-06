@@ -1,7 +1,7 @@
-import { VerifyJWT, get_file_binary, isNullOrWhiteSpace } from "./globals.js";
+import { VerifyJWT, isNullOrWhiteSpace } from "./globals.js";
 import crypto from 'crypto';
 
-async function authenticate(body: object, params: string, jwt: string, public_key: string, pathname: string, filebuffer: string) {
+async function authenticate(body: any, params: string, jwt: string, public_key: string, pathname: string, use_cropped_body: boolean) {
     let keys: string[] = [];
     let unsorted_data: { [key: string]: any } = {};
 
@@ -39,6 +39,7 @@ async function authenticate(body: object, params: string, jwt: string, public_ke
 
     let sha512_authed_checksum: string = '';
     let body_sha512_authed_checksum: string = '';
+
     if (typeof verify_jwt_status === 'string') {
         throw "VerifyJWT output was a string for some reason.";
     } else {
@@ -47,6 +48,12 @@ async function authenticate(body: object, params: string, jwt: string, public_ke
 
         if (verify_jwt_status.body_checksum) {
             body_sha512_authed_checksum = verify_jwt_status.body_checksum.toString();
+        }
+        if (use_cropped_body == true) {
+            if (!verify_jwt_status.just_file_sha512) {
+                throw "use_cropped_body is true - however, jwt.just_file_sha512 is null.";
+            }
+            body_sha512_authed_checksum = verify_jwt_status.just_file_sha512.toString();
         }
     }
 
@@ -59,15 +66,21 @@ async function authenticate(body: object, params: string, jwt: string, public_ke
         throw "Incoming data does not match checksum in JWT packet.";
     }
 
-    if (body && Object.keys(body).length > 0) {
+    // Ignore the rest of the body and just use the provided field in formdata (not recommended, unless you can't get the full form-data for some reason)
+    if (body) {
         if (!body_sha512_authed_checksum) {
-            throw "Body was provided, however, jwt.body_checksum is not specified.";
+            throw "Body was provided - however, jwt.body_checksum is null.";
         }
     
-        const hashData = new TextEncoder().encode(await get_file_binary(body));
+        const hashData = new TextEncoder().encode(body);
         const hashBuffer = await crypto.subtle.digest("SHA-512", hashData);
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+
+        console.log("use_cropped_body", use_cropped_body);
+        console.log("body", body);
+        console.log("body_sha512_authed_checksum", body_sha512_authed_checksum);
+        console.log("hashHex", hashHex);
 
         if (body_sha512_authed_checksum != hashHex) {
             // body does not match checksum in JWT.
