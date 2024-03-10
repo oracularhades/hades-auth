@@ -7,10 +7,9 @@ export default async function sign(metadata: object, body: any, private_key: str
 
     unsorted_data = {
         ...metadata
-        // ...body // body is no longer included here, has it's own checksum. Unsorted_data is just for metadata and params now.
     };
 
-    if (body) { // Before, in-case bugs come up: if (body && Object.keys(body).length > 0) {
+    if (body) {
         let hashHex = null;
         let hashHex_file = null;
 
@@ -39,7 +38,7 @@ export default async function sign(metadata: object, body: any, private_key: str
         if (only_use_field_for_body) {
             unsorted_data = {
                 ...unsorted_data,
-                just_file_sha512: hashHex_file
+                // just_file_sha512: hashHex_file // doesn't look like this is needed.
             }
         }
     }
@@ -50,12 +49,15 @@ export default async function sign(metadata: object, body: any, private_key: str
         data[key] = unsorted_data[key];
     });
 
+    console.log("METADATA", JSON.stringify(data));
+
     const hash = crypto.createHash('sha512');
     hash.update(JSON.stringify(data));
     const output_sha512_checksum: string = hash.digest('hex');
 
     let jwt_data = {
         checksum: output_sha512_checksum,
+        exp: new Date().getTime()+60000,
         body_checksum: data.body_sha512,
         just_file_sha512: data.just_file_sha512
     }

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "399"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{"deployment.kubernetes.io/revision":"399"},"creationTimestamp":"2023-07-06T00:32:48Z","generation":435,"labels":{"app":"clubs-api"},"name":"clubs-api","namespace":"ingress-nginx","resourceVersion":"108779784","uid":"f5649f73-7435-4a16-88ae-c87499efc5bd"},"spec":{"progressDeadlineSeconds":600,"replicas":1,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app":"clubs-api"}},"strategy":{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"25%"},"type":"RollingUpdate"},"template":{"metadata":{"annotations":{"kubectl.kubernetes.io/restartedAt":"2024-01-24T09:55:33Z"},"creationTimestamp":null,"labels":{"app":"clubs-api"}},"spec":{"containers":[{"image":"ghcr.io/motionfans/clubs-api:8bd2903d093af448250c5acf076a7771e42c206a","imagePullPolicy":"Always","name":"clubs-api","resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File"}],"dnsPolicy":"ClusterFirst","imagePullSecrets":[{"name":"dockerconfigjson-github-com"}],"restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":30}}},"status":{"availableReplicas":1,"conditions":[{"lastTransitionTime":"2024-01-31T04:49:43Z","lastUpdateTime":"2024-01-31T04:49:43Z","message":"Deployment has minimum availability.","reason":"MinimumReplicasAvailable","status":"True","type":"Available"},{"lastTransitionTime":"2023-10-06T23:20:03Z","lastUpdateTime":"2024-02-11T06:13:36Z","message":"ReplicaSet \"clubs-api-84d94cf757\" has successfully progressed.","reason":"NewReplicaSetAvailable","status":"True","type":"Progressing"}],"observedGeneration":435,"readyReplicas":1,"replicas":1,"updatedReplicas":1}}
+  creationTimestamp: "2023-07-06T00:32:48Z"
+  generation: 436
+  labels:
+    app: clubs-api
+  name: clubs-api
+  namespace: ingress-nginx
+  resourceVersion: "108781859"
+  uid: f5649f73-7435-4a16-88ae-c87499efc5bd
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: clubs-api
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: "2024-01-24T09:55:33Z"
+      creationTimestamp: null
+      labels:
+        app: clubs-api
+    spec:
+      containers:
+      - image: ghcr.io/motionfans/clubs-api:8bd2903d093af448250c5acf076a7771e42c206a
+        imagePullPolicy: Always
+        name: clubs-api
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: dockerconfigjson-github-com
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2024-01-31T04:49:43Z"
+    lastUpdateTime: "2024-01-31T04:49:43Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2023-10-06T23:20:03Z"
+    lastUpdateTime: "2024-02-11T06:13:36Z"
+    message: ReplicaSet "clubs-api-84d94cf757" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 436
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

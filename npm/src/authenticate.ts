@@ -77,10 +77,10 @@ async function authenticate(body: any, params: string, jwt: string, public_key: 
         const hashArray = Array.from(new Uint8Array(hashBuffer));
         const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
 
-        console.log("use_cropped_body", use_cropped_body);
-        console.log("body", body);
-        console.log("body_sha512_authed_checksum", body_sha512_authed_checksum);
-        console.log("hashHex", hashHex);
+        // console.log("use_cropped_body", use_cropped_body);
+        // console.log("body", body);
+        // console.log("body_sha512_authed_checksum", body_sha512_authed_checksum);
+        // console.log("hashHex", hashHex);
 
         if (body_sha512_authed_checksum != hashHex) {
             // body does not match checksum in JWT.
