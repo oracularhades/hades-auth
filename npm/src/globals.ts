@@ -1,5 +1,6 @@
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { SignJWT, importPKCS8, JWTPayload } from "jose";
+import get_file_binary from './file/binary/get_file_binary.js';
 
 function isNullOrWhiteSpace(str: string | null | undefined): boolean {
     if (str === null || str === undefined) {
@@ -138,15 +139,42 @@ async function JSONorForm(variable: any) {
     return null;
 }
 
-async function get_file_binary(file: any): Promise<string> {
-    return new Promise((resolve, reject) => {
-        // if (typeof window === 'undefined' && typeof process === 'object') { // Check if running in Node.js
-            const data = file instanceof Buffer ? file.toString('binary') : file;
-            resolve(data);
-        // } else {
-        //     reject(new Error('FileReader is not supported in this environment.'));
-        // }
-    });
+async function get_formdata_field_hash(field: string, body: any): Promise<string> {
+    let hashHex_file = null;
+
+    if (!body.get(field)) {
+        throw `body not provided: ${field}`;
+    }
+
+    let is_file = false;
+    try {
+        await get_file_binary(body.get(field));
+        is_file = true;
+    } catch (error) {
+    }
+
+    console.log("HM", body.get(field));
+
+    let encoding;
+    if (is_file == true) {
+        encoding = await get_file_binary(body.get(field));
+    }
+
+    console.log("ENCODING", encoding);
+
+    const hashData_file = new TextEncoder().encode(encoding);
+    let hashBuffer_file = null;
+    if (typeof window === 'undefined' && typeof process === 'object') {
+        hashBuffer_file = await crypto.subtle.digest("SHA-512", hashData_file);
+    } else if (typeof window !== 'undefined') {
+        hashBuffer_file = hashBuffer_file = await window.crypto.subtle.digest("SHA-512", hashData_file);
+    } else {
+        throw 'FileReader is not supported in this environment.';
+    }
+    const hashArray_file = Array.from(new Uint8Array(hashBuffer_file));
+    hashHex_file = hashArray_file.map(byte => byte.toString(16).padStart(2, '0')).join('');
+
+    return hashHex_file;
 }
 
-export { isNullOrWhiteSpace, generateRandomID, importEllipticPublicKey, importEllipticPrivateKey, signJWT, VerifyJWT, JSONorForm, get_file_binary }
+export { isNullOrWhiteSpace, generateRandomID, importEllipticPublicKey, importEllipticPrivateKey, signJWT, VerifyJWT, JSONorForm, get_formdata_field_hash }

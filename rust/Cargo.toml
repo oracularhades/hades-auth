@@ -1,0 +1,31 @@
+[package]
+name = "hades_auth"
+description = "https://github.com/oracularhades/hades-auth"
+license = "Apache-2.0"
+version = "0.1.3"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+base64 = "0.21.4"
+domain = { version = "0.8.1", features = ["resolv"] }
+hex = "0.4.3"
+hex-literal = "0.4.1"
+jwt = "0.16.0"
+openssl = "0.10.57"
+oracularhades-mirror-frank_jwt = "3.1.4"
+rand = "0.8.5"
+regex = "1.10.1"
+reqwest = "0.11.22"
+serde = "1.0.189"
+serde_json = "1.0.107"
+serde_urlencoded = "0.7.1"
+sha2 = "0.10.8"
+tokio = "1.33.0"
+trust-dns-resolver = "0.23.1"
+url = "2.4.1"
+
+[lib]
+name = "hades_auth"
+path = "src/lib.rs"

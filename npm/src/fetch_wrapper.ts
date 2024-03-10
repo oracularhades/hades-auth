@@ -1,4 +1,4 @@
-import { JSONorForm, get_file_binary } from "./globals.js";
+import { JSONorForm } from "./globals.js";
 import sign from "./sign.js";
 
 export default async function fetch_wrapper(url: string, properties: any, deviceid: string, private_key: string) {
@@ -42,9 +42,9 @@ export default async function fetch_wrapper(url: string, properties: any, device
         if (jsonOrForm == "JSON") {
             output = JSON.parse(properties.body);
         }
-        token = await sign(data_to_be_hashed_for_signing, output, private_key);
+        token = await sign(data_to_be_hashed_for_signing, output, private_key, properties.only_validate_field_in_formdata_for_body);
     } else {
-        token = await sign(data_to_be_hashed_for_signing, {}, private_key);
+        token = await sign(data_to_be_hashed_for_signing, null, private_key, null);
     }
 
     paramsObj = {

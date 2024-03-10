@@ -1,0 +1,4 @@
+*.ds
+.DS_STORE
+/server/target
+*/node_modules*
