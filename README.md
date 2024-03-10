@@ -1,3 +1,5 @@
+Project status: alpha. There are bugs and some un-tidy code. This will get fixed :)
+
 # About
 Authentication libraries are typically very messy, usually they're terrible to start off with, too cramped and don't solve a problem enough to be worth using. Most developers resort to session keys / bearer tokens because it's the easiest. This library aims to change that by making public / private key signing authentication easier than session / bearer tokens.
 
