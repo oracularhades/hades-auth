@@ -9,20 +9,16 @@ export default async function sign(metadata, body, private_key, only_use_field_f
     if (body) {
         let hashHex = null;
         let hashHex_file = null;
-        const hashData = new TextEncoder().encode(body);
-        let hashBuffer = null;
-        if (typeof window === 'undefined' && typeof process === 'object') {
-            hashBuffer = await crypto.subtle.digest("SHA-512", hashData);
-        }
-        else if (typeof window !== 'undefined') {
-            hashBuffer = hashBuffer = await window.crypto.subtle.digest("SHA-512", hashData);
-        }
-        else {
-            throw 'FileReader is not supported in this environment.';
-        }
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
         const jsonOrFormV = await JSONorForm(body);
+        const hash = crypto.createHash('sha512');
+        if (jsonOrFormV == "JSON") {
+            hash.update(JSON.stringify(body));
+        }
+        else if (jsonOrFormV != "FormData") {
+            hash.update(body);
+        }
+        const body_output_sha512_checksum = hash.digest('hex');
+        hashHex = body_output_sha512_checksum;
         if (jsonOrFormV == "FormData" && only_use_field_for_body) {
             hashHex_file = await get_formdata_field_hash(only_use_field_for_body, body);
         }
@@ -42,7 +38,7 @@ export default async function sign(metadata, body, private_key, only_use_field_f
     await keys.forEach((key) => {
         data[key] = unsorted_data[key];
     });
-    console.log("METADATA", JSON.stringify(data));
+    console.log("BODY", JSON.stringify(body));
     const hash = crypto.createHash('sha512');
     hash.update(JSON.stringify(data));
     const output_sha512_checksum = hash.digest('hex');

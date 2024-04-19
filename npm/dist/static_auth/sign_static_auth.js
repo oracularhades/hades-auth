@@ -1,10 +1,10 @@
-import sign from "../sign.js";
-export default async function sign_static_auth(deviceid, private_key, additional_metadata) {
-    const data = {
-        deviceid: deviceid,
+import { signJWT } from "../globals.js";
+export default async function static_auth_sign(additional_data, private_key) {
+    let jwt_data = {
+        additional_data: additional_data,
         created: new Date().getTime(),
-        additional_metadata: additional_metadata
+        exp: new Date().getTime() + 60000
     };
-    let sign_status = await sign(data, null, private_key, null);
-    return sign_status.jwt;
+    let jwt = await signJWT(jwt_data, private_key);
+    return jwt;
 }

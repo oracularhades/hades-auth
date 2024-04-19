@@ -1,6 +1,6 @@
 import { VerifyJWT } from "../globals.js";
 
-export default async function verify_static_auth(jwt: string, deviceid: string, public_key: string, expiry: number) {
+export default async function static_auth_verify(jwt: string, public_key: string, expiry: number) {
     // 2592000000 (if a default expiry is setup in the future, this is the milliseconds for 30 days)
 
     try {
@@ -34,9 +34,12 @@ export default async function verify_static_auth(jwt: string, deviceid: string, 
         throw "JWT is expired.";
     }
 
-    if (jwt_data.deviceid != deviceid) {
-        throw "jwt.deviceid and provided deviceid do not match.";
+    const payload = await VerifyJWT(jwt, public_key); // This will throw an error if invalid.;
+
+    let result = null;
+    if (payload && typeof payload == "object" && payload.additional_data) {
+        result = payload.additional_data
     }
 
-    return await VerifyJWT(jwt, public_key); // This will throw an error if invalid.
+    return result;
 }

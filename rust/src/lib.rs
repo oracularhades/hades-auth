@@ -2,15 +2,30 @@ use oracularhades_mirror_frank_jwt::{Algorithm, encode, decode};
 use serde_json::{json, Value};
 use openssl::ec::{EcGroup, EcKey};
 use openssl::nid::Nid;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use std::error::Error;
 use sha2::{Sha256, Sha512, Digest};
+use std::time::{SystemTime, UNIX_EPOCH};
+use base64::{Engine as _, engine::general_purpose};
+
+use serde::{Deserialize, Serialize};
 
 mod globals;
 mod structs;
 
-use crate::globals::{get_creds, resolve_txt_promise, url_sanitize, is_valid_hostname, unsafe_noverification_jwt_payload_decode, VerifyJWT, is_null_or_whitespace, generate_random_id};
+use crate::globals::{value_to_hashmap, VerifyJWT, is_null_or_whitespace, generate_random_id};
 use crate::structs::*;
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Static_auth_sign {
+    pub created: i64,
+    pub additional_data: Option<Value>
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Signed_data_identifier {
+    pub device_id: String
+}
 
 pub async fn Sign(params: Value, body: Option<&str>, private_key: &str, only_use_field_for_body: Option<&str>) -> Result<Sign_output, String> {
     // Create an unsorted_data variable. This is used to store params data that is not yet in alphabetical order. It's important for params to be in alphabetical order, as params could be jumbled during transit, for the signature to be correct, it needs to be the exact same as when it was signed.
@@ -42,7 +57,6 @@ pub async fn Sign(params: Value, body: Option<&str>, private_key: &str, only_use
         hasher.update(body_str); // Add body string to the hasher.
         let result = hasher.finalize(); // Output the hash, however, doesn't output the hash as hex.
         hash_hex = hex::encode(Sha512::digest(result.clone())); // Digest the hash and encode to hex.
-        println!("{:?}", hash_hex.clone());
 
         // # If the data is formdata and "only_use_field" is specified, we need to make a unique hash using that data in that formdata field. This is because some web-servers are absolutely painful trying to get a complete form-data output (looking at you express.js) and sometimes only req.body["file"] works, thus we cannot get the full formdata without an overhaul, and I do not expect developers to overhaul their code because of something that stupid. Instead, by creating a hash of a specific field (e.g one that contains an image) alongside the existing formdata hash, you can still authenticate a field. However, this needs to be re-vamped in the future, "only_use_field" is such a dumb name (because we're still keeping the formdata hash as well), it's so painful it's just limited to a single field. Instead, I should add a true/false "unique_hashes" and when set to true, should output a JSON object containing the field name and it's hash, so that can be included in the signed JWT. This is literally making me nauseous because I HATE it when something isn't perfect, but I have other things to do right now.
         // # This is incomplete until I find a good multi-part form-data parse for Rust.
@@ -100,11 +114,12 @@ pub async fn Sign(params: Value, body: Option<&str>, private_key: &str, only_use
     // Format private key (TODO: Make it so any existing header/footer is removed so the key can be formatted with or without header/footer and still work).
     let private_key_pem = format!(
         "-----BEGIN PRIVATE KEY-----\n{}\n-----END PRIVATE KEY-----\n",
-        private_key
+        private_key.replace("-----BEGIN PRIVATE KEY-----\n", "").replace("\n-----END PRIVATE KEY-----\n", "").replace("\n-----END PRIVATE KEY-----", "")
     );
 
+    // Sign the JWT.
     let mut header = json!({});
-    let jwt = encode(header, &private_key_pem, &jwt_data, Algorithm::ES512).expect("JWT signing failed."); // Sign the JWT.
+    let jwt = encode(header, &private_key_pem, &jwt_data, Algorithm::ES512).expect("JWT signing failed.");
 
     let mut params_clone = params.clone(); // Create a clone of params, since we don't want to mess up the original params.
     params_clone["authenticator_JWT_Token"] = Value::from(jwt.clone()); // Add the signed JWT to params output.
@@ -126,37 +141,19 @@ pub async fn authenticate(
     pathname: &str,
     use_cropped_body: bool,
 ) -> Result<bool, String> {
-    let mut keys: Vec<String> = Vec::new();
+    // TODO: check this jwt is specifying expiry as some parsers expect that.
 
-    // Create an unsorted_data variable. This is used to store params data that is not yet in alphabetical order. It's important for params to be in alphabetical order, as params could be jumbled during transit, for the signature to be correct, it needs to be the exact same as when it was signed.
-    let mut unsorted_data: HashMap<String, String> = HashMap::new();
+    let mut params_as_hashmap: HashMap<String, String> = value_to_hashmap(params.clone()).expect("Failed to convert params (serde::value) to hashmap");
 
-    // Create params_as_hashmap. This takes serde::Value and converts it to a HashMap. I originally made "params" be a HashMap<Value, Value> before realising Serde was better. It's future-proofing to just convert to HashMap<String, String>. Some people might complain about using Serde, but that day is not today.
-    let mut params_as_hashmap: HashMap<String, String> = HashMap::new();
-    if let Some(array) = params.as_array() {
-        for item in array {
-            if let Some(obj) = item.as_object() {
-                for (key, value) in obj {
-                    if let Some(value_str) = value.as_str() {
-                        params_as_hashmap.insert(key.to_string(), value_str.to_string());
-                    }
-                }
-            }
-        }
-    }
-
-    // Drain params_as_hashmap into unsorted_data.
-    unsorted_data.extend(params_as_hashmap.into_iter());
-
-    keys.extend(unsorted_data.keys().cloned()); // Drain unsorted_data into keys.
-    keys.sort(); // Sort keys so they are in alphabetical order.
+    let mut keys: Vec<String> = params_as_hashmap.keys().cloned().collect();
+    keys.sort(); // Sort keys alphabetically
 
     // Create a new HashMap<String, String> with all our params, excluding certain keys.
-    let mut data: HashMap<String, String> = HashMap::new();
+    let mut data: BTreeMap<String, String> = BTreeMap::new();
     for key in keys.iter() {
-        if key != "authenticator_JWT_Token" { // Exclude certain keys.
-            if let Some(value) = unsorted_data.get(key) {
-                data.insert(key.clone(), value.clone());
+        if key.as_str() != "authenticator_JWT_Token" { // Exclude certain keys.
+            if let Some(value) = params_as_hashmap.get(&key.clone()) {
+                data.insert(key.to_string(), value.clone());
             }
         }
     }
@@ -177,7 +174,7 @@ pub async fn authenticate(
     // Format public key (TODO: Make it so any existing header/footer is removed so the key can be formatted with or without header/footer and still work).
     let public_key_pem = format!(
         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----\n",
-        public_key
+        public_key.replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
     );
 
     // Verify signed JWT against end-developer provided public-key.
@@ -203,10 +200,7 @@ pub async fn authenticate(
         }
     }
 
-    println!("data {:?}", data.clone());
-
     let data_new = serde_json::to_string(&data).unwrap();
-    println!("data_new {}", data_new.clone());
 
     // todo: there isn't anything checking for null with values like the checksum, so they could be null, you probably won't get very far, but is a good thing to implement.
 
@@ -214,18 +208,20 @@ pub async fn authenticate(
     let mut hasher = Sha512::new(); // Create new sha512 hash.
     hasher.update(data_new); // Add data to hasher.
     let result = hasher.finalize(); // Finalize the hash.
-    if params_sha512_authed_checksum != hex::encode(Sha512::digest(result.clone())) { // Ensure params matches hash in signed JWT.
+
+    let hexS: String = hex::encode(result);
+
+    if params_sha512_authed_checksum != hexS { // Ensure params matches hash in signed JWT.
         return Err("Incoming data does not match checksum in JWT packet.".to_string());
     }
 
     // If there is a body, make sure it matches the checksum in signed JWT.
     if let Some(body) = body {
-        let mut hasher = Sha256::new(); // Create new sha512 hash.
-        hasher.update(serde_json::to_string(&body.as_bytes()).unwrap().as_bytes()); // Add data to hasher.
-        let result = hasher.finalize(); // Finalize the hash.
+        let mut hasher = Sha512::new(); // Create new sha512 hash.
+        hasher.update(body.clone()); // Add data to hasher... TODO: 99% sure this is broken and dumb
+        let result2 = hasher.finalize(); // Finalize the hash.
 
-        let unverified_body_hash_as_hex: String = hex::encode(Sha512::digest(result.clone())); // Digest and convert hash to hex.
-        println!("body {:?}", unverified_body_hash_as_hex);
+        let unverified_body_hash_as_hex: String = hex::encode(result2); // Digest and convert hash to hex.
 
         if body_sha512_authed_checksum.expect("Body provided but no body hash was provided in incoming signed JWT.") != unverified_body_hash_as_hex { // Ensure body matches hash in signed JWT.
             return Err(
@@ -290,4 +286,70 @@ pub async fn onboard_new_device(public_key: &str) -> Result<DeviceDetails, Box<d
     // }
 
     Ok(DeviceDetails { ok: true, device_id })
+}
+
+pub async fn static_auth_sign(private_key: &str, additional_metadata: Value) -> Result<String, Box<dyn Error>> {
+    let data = json!({
+        "created": TryInto::<i64>::try_into(SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Failed to get duration since unix epoch")
+        .as_millis()).expect("Failed to get timestamp"),
+        "additional_metadata": additional_metadata
+    });
+
+    let private_key_pem = format!(
+        "-----BEGIN PRIVATE KEY-----\n{}\n-----END PRIVATE KEY-----\n",
+        private_key.replace("-----BEGIN PRIVATE KEY-----\n", "").replace("\n-----END PRIVATE KEY-----\n", "").replace("\n-----END PRIVATE KEY-----", "")
+    );
+
+    let mut header = json!({});
+    let jwt = encode(header, &private_key_pem, &data, Algorithm::ES512).expect("JWT signing failed.");
+    Ok(jwt)
+}
+
+pub async fn static_auth_verify(jwt: String, public_key: String) -> Result<Option<Value>, Box<dyn Error>> {
+    let expiry: i64 = 40000000;
+
+    let public_key_pem = format!(
+        "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----\n",
+        public_key.replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
+    );
+
+    let jwt_data_raw = VerifyJWT(jwt, public_key_pem).expect("JWT validation failed:");
+    let jwt_data: Static_auth_sign = serde_json::from_str(&jwt_data_raw).expect("Failed to prase JWT");
+
+    let date1 = jwt_data.created;
+    let date2 = TryInto::<i64>::try_into(SystemTime::now()
+    .duration_since(UNIX_EPOCH)
+    .expect("Failed to get duration since unix epoch")
+    .as_millis()).expect("Failed to get timestamp");
+
+    if (date2 < date1) {
+        return Err("jwt.created is before current date.".into());
+    }
+    let diff = date2 - date1;
+    if (diff == 0) {
+        return Err("Invalid date.".into());
+    }
+    if (diff >= expiry) {
+        return Err("JWT is expired.".into());
+    }
+
+    Ok(jwt_data.additional_data)
+}
+
+pub fn get_unsafe_noverification_jwt_payload(jwt: String) -> Result<Value, String> {
+    // Split the token into three parts
+    let parts: Vec<&str> = jwt.split('.').collect();
+    // Check if the token has three parts
+    if parts.len() != 3 {
+        return Err("Invalid JWT format".to_string());
+    }
+    let engine = general_purpose::STANDARD_NO_PAD;
+    // Decode the second part, which is the payload
+    let payload = engine.decode(parts[1]).unwrap();
+    // Parse the payload as a JSON value
+    let json = serde_json::from_slice(&payload).expect("Failed to decode JSON from JWT payload");
+    // Return the JSON value
+    Ok(json)
 }
