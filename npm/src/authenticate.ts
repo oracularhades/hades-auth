@@ -1,4 +1,4 @@
-import { VerifyJWT, isNullOrWhiteSpace } from "./globals.js";
+import { JSONorForm, VerifyJWT, isNullOrWhiteSpace } from "./globals.js";
 import crypto from 'crypto';
 
 async function authenticate(body: any, params: string, jwt: string, public_key: string, pathname: string, use_cropped_body: boolean) {
@@ -71,19 +71,17 @@ async function authenticate(body: any, params: string, jwt: string, public_key: 
         if (!body_sha512_authed_checksum) {
             throw "Body was provided - however, jwt.body_checksum is null.";
         }
-    
-        const hashData = new TextEncoder().encode(body);
-        const hashBuffer = await crypto.subtle.digest("SHA-512", hashData);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
 
-        // console.log("use_cropped_body", use_cropped_body);
-        // console.log("body", body);
-        // console.log("body_sha512_authed_checksum", body_sha512_authed_checksum);
-        // console.log("hashHex", hashHex);
-
-        if (body_sha512_authed_checksum != hashHex) {
-            // body does not match checksum in JWT.
+        const hash = crypto.createHash('sha512');
+        const jsonOrFormV = await JSONorForm(body);
+        if (jsonOrFormV == "JSON") {
+            hash.update(JSON.stringify(body));
+        } else if (jsonOrFormV != "FormData") {
+            hash.update(body);
+        }
+        const output_sha512_for_unverified_data: string = hash.digest('hex');
+        if (sha512_authed_checksum != output_sha512_for_unverified_data) {
+            // data object does not match checksum in JWT.
             throw "Incoming body data does not match checksum in JWT packet.";
         }
     }
