@@ -1,5 +1,7 @@
 Project status: alpha. There are bugs and some un-tidy code. This will get fixed :)
 
+**API updating frequently, not buggy (afaik), so be-careful using this in prod. Better documentation to come soon.** *there is a Rust version, it's just not documented*.
+
 # About
 Authentication libraries are typically very messy, usually they're terrible to start off with, too cramped and don't solve a problem enough to be worth using. Most developers resort to session keys / bearer tokens because it's the easiest. This library aims to change that by making public / private key signing authentication easier than session / bearer tokens.
 
