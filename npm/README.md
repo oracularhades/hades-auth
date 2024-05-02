@@ -58,7 +58,7 @@ const response = fetch_wrapper(`https://example.com`, {
         name: "John Doe"
     }),
     redirect: 'error',
-}device_id, private_key)
+}, device_id, private_key)
 ```
 
 # Sign data (client-side)
