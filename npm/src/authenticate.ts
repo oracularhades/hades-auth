@@ -75,12 +75,15 @@ async function authenticate(body: any, params: string, jwt: string, public_key: 
         const hash = crypto.createHash('sha512');
         const jsonOrFormV = await JSONorForm(body);
         if (jsonOrFormV == "JSON") {
+            console.log("DATA1", JSON.stringify(body));
             hash.update(JSON.stringify(body));
         } else if (jsonOrFormV != "FormData") {
+            console.log("DATA2", body);
             hash.update(body);
         }
         const output_sha512_for_unverified_data: string = hash.digest('hex');
-        if (sha512_authed_checksum != output_sha512_for_unverified_data) {
+        console.log(`${sha512_authed_checksum} != ${output_sha512_for_unverified_data}`);
+        if (body_sha512_authed_checksum != output_sha512_for_unverified_data) {
             // data object does not match checksum in JWT.
             throw "Incoming body data does not match checksum in JWT packet.";
         }

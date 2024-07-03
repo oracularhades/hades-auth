@@ -55,7 +55,7 @@ export default async function sign(metadata: object, body: any, private_key: str
 
     let jwt_data = {
         checksum: output_sha512_checksum,
-        exp: new Date().getTime()+60000,
+        exp: new Date().getTime()+31536000000,
         body_checksum: data.body_sha512,
         just_file_sha512: data.just_file_sha512
     }

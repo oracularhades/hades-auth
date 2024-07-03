@@ -1,4 +1,6 @@
-*.ds
 .DS_STORE
+*/.DS_STORE
 /server/target
 */node_modules*
+
+rust/target

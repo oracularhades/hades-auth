@@ -38,13 +38,13 @@ export default async function sign(metadata, body, private_key, only_use_field_f
     await keys.forEach((key) => {
         data[key] = unsorted_data[key];
     });
-    console.log("BODY", JSON.stringify(body));
+
     const hash = crypto.createHash('sha512');
     hash.update(JSON.stringify(data));
     const output_sha512_checksum = hash.digest('hex');
     let jwt_data = {
         checksum: output_sha512_checksum,
-        exp: new Date().getTime() + 60000,
+        exp: new Date().getTime() + 31536000000,
         body_checksum: data.body_sha512,
         just_file_sha512: data.just_file_sha512
     };
