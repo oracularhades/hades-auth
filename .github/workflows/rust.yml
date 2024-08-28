@@ -1,0 +1,51 @@
+name: Build and release crate package
+
+on:
+  workflow_dispatch: # Allows the workflow to be triggered manually
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: sudo apt install tree
+        run: sudo apt install tree
+
+      - name: Change directory
+        run: cd rust
+
+      - name: Create crates
+        run: mkdir crates
+
+      - name: Download crates from mirror
+        run: curl -L -o crates/frank_jwt.crate https://github.com/motionfans-mirror/frank_jwt/releases/download/latest/output.crate
+
+      - name: Install crates from mirror
+        run: |
+          for file in crates/*; do
+            cargo install --path "$file"
+          done
+
+      - name: cargo test
+        run: cargo test
+
+      - name: cargo package
+        run: cargo package
+
+      - name: tree
+        run: tree
+
+      - name: Rename output file
+        run: cd target/package && mv *.crate output.crate
+
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: Release ${{ github.ref_name }}
+          files: |
+            ./target/package/output.crate
