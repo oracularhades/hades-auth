@@ -38,8 +38,14 @@ jobs:
       - name: tree
         run: tree
 
-      - name: Rename output file
-        run: cd target/package && mv *.crate output.crate
+      - name: cd target/package
+        run: cd target/package
+
+      - name: Delete crate file
+        run: rm *.crate output.crate
+
+      - name: Rename directory
+        run: mv hades_auth* hades_auth
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -48,4 +54,4 @@ jobs:
           prerelease: true
           title: Release ${{ github.ref_name }}
           files: |
-            ./target/package/output.crate
+            ./target/package/hades_auth
