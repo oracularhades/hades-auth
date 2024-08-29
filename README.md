@@ -11,4 +11,4 @@ Session keys / bearer tokens are weak because if someone intercepts them, they c
 If your database is leaked, with session keys / bearer tokens, it comes down to your hashing methods and handling of that data in your database, including if someone had gotten into a webserver/load-balancer and started collecting tokens. With public / private key signing, you're only storing public-keys on your end and they're called "public-keys" for a reason, because it doesn't matter if they're leaked.
 
 # Versions
-[NPM](https://gitlab.com/oracularhades/authenticator/tree/main/npm)
+[NPM](https://gitlab.com/oracularhades/hades-auth/tree/main/npm)
