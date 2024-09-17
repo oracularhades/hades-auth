@@ -27,6 +27,8 @@ pub struct Signed_data_identifier {
     pub device_id: String
 }
 
+// TODO: params:Value should be params: &Value
+// TODO: Sign() doesn't work.
 pub async fn Sign(params: Value, body: Option<&str>, private_key: &str, only_use_field_for_body: Option<&str>) -> Result<Sign_output, String> {
     // Create an unsorted_data variable. This is used to store params data that is not yet in alphabetical order. It's important for params to be in alphabetical order, as params could be jumbled during transit, for the signature to be correct, it needs to be the exact same as when it was signed.
     let mut unsorted_data: HashMap<String, String> = HashMap::new();
@@ -289,14 +291,18 @@ pub async fn onboard_new_device(public_key: &str) -> Result<DeviceDetails, Box<d
 }
 
 pub async fn static_auth_sign(private_key: &str, additional_metadata: Value) -> Result<String, Box<dyn Error>> {
+    // TODO: I got distracted with what static auth should be and focused too much on JSON. Static auth should be exactly like sign() without the params and pathname (maybe we keep pathname idk, some sort of nonce) stuff. This function is literally just a JWT, and while that's still useful and makes things cleaner, we can instead authenticate large amounts of data with static auths.
     let data = json!({
         "created": TryInto::<i64>::try_into(SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .expect("Failed to get duration since unix epoch")
         .as_millis()).expect("Failed to get timestamp"),
+        "exp": TryInto::<i64>::try_into(SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Failed to get duration since unix epoch")
+        .as_millis()+31536000000).expect("Failed to get timestamp"),
         "additional_metadata": additional_metadata
     });
-
     let private_key_pem = format!(
         "-----BEGIN PRIVATE KEY-----\n{}\n-----END PRIVATE KEY-----\n",
         private_key.replace("-----BEGIN PRIVATE KEY-----\n", "").replace("\n-----END PRIVATE KEY-----\n", "").replace("\n-----END PRIVATE KEY-----", "")
@@ -307,6 +313,7 @@ pub async fn static_auth_sign(private_key: &str, additional_metadata: Value) -> 
     Ok(jwt)
 }
 
+// TODO: These shoudl be borrowed, not Strings.
 pub async fn static_auth_verify(jwt: String, public_key: String) -> Result<Option<Value>, Box<dyn Error>> {
     let expiry: i64 = 40000000;
 
