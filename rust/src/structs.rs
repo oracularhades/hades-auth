@@ -115,3 +115,14 @@ pub struct Sign_output {
     pub params_as_value: Value,
     pub jwt: String
 }
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Static_auth_sign {
+    pub created: i64,
+    pub additional_data: Option<Value>
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Signed_data_identifier {
+    pub device_id: String
+}

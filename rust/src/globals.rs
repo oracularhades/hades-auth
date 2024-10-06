@@ -3,13 +3,13 @@ use url::Url;
 use crate::structs::{Creds, Keypair};
 use base64::{Engine as _, engine::general_purpose};
 use serde_json::Value;
-use oracularhades_mirror_frank_jwt::{Algorithm, decode, ValidationOptions};
+use frank_jwt::{Algorithm, decode, ValidationOptions};
 use std::process::Command;
 use openssl::ec::{EcGroup, EcKey};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub fn VerifyJWT(jwt_token: String, publickey: String) -> Result<String, String> {
+pub fn VerifyJWT(jwt_token: &str, publickey: &str) -> Result<String, String> {
     // Decode the JWT with the public key and the ES512 algorithm
     // You can also specify some validation options, such as leeway, issuer, audience, etc.
     let res = decode(&jwt_token, &publickey, Algorithm::ES512, &ValidationOptions::default());

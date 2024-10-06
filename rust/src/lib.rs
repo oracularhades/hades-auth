@@ -1,4 +1,4 @@
-use oracularhades_mirror_frank_jwt::{Algorithm, encode, decode};
+use frank_jwt::{Algorithm, encode, decode};
 use serde_json::{json, Value};
 use openssl::ec::{EcGroup, EcKey};
 use openssl::nid::Nid;
@@ -15,17 +15,6 @@ mod structs;
 
 use crate::globals::{value_to_hashmap, VerifyJWT, is_null_or_whitespace, generate_random_id};
 use crate::structs::*;
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct Static_auth_sign {
-    pub created: i64,
-    pub additional_data: Option<Value>
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct Signed_data_identifier {
-    pub device_id: String
-}
 
 // TODO: params:Value should be params: &Value
 // TODO: Sign() doesn't work.
@@ -180,7 +169,7 @@ pub async fn authenticate(
     );
 
     // Verify signed JWT against end-developer provided public-key.
-    let verify_jwt_status_value = VerifyJWT(jwt.to_string(), public_key_pem.to_string()).expect("Failed to verify jwt");
+    let verify_jwt_status_value = VerifyJWT(jwt, &public_key_pem).expect("Failed to verify jwt");
     
     // We've verified the signed JWT matches the end-developer provided public-key. Now we need to make sure the data is authenticated.
 
@@ -313,23 +302,22 @@ pub async fn static_auth_sign(private_key: &str, additional_metadata: Value) -> 
     Ok(jwt)
 }
 
-// TODO: These shoudl be borrowed, not Strings.
-pub async fn static_auth_verify(jwt: String, public_key: String) -> Result<Option<Value>, Box<dyn Error>> {
-    let expiry: i64 = 40000000;
-
+// TODO: These should be borrowed, not Strings.
+pub async fn static_auth_verify(jwt: &str, public_key: &str, expiry: Option<i64>) -> Result<Option<Value>, Box<dyn Error>> {
     let public_key_pem = format!(
         "-----BEGIN PUBLIC KEY-----\n{}\n-----END PUBLIC KEY-----\n",
         public_key.replace("-----BEGIN PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----\n", "").replace("\n-----END PUBLIC KEY-----", "")
     );
 
-    let jwt_data_raw = VerifyJWT(jwt, public_key_pem).expect("JWT validation failed:");
+    let jwt_data_raw = VerifyJWT(jwt, &public_key_pem).expect("JWT validation failed:");
     let jwt_data: Static_auth_sign = serde_json::from_str(&jwt_data_raw).expect("Failed to prase JWT");
 
     let date1 = jwt_data.created;
     let date2 = TryInto::<i64>::try_into(SystemTime::now()
     .duration_since(UNIX_EPOCH)
     .expect("Failed to get duration since unix epoch")
-    .as_millis()).expect("Failed to get timestamp");
+    .as_millis())
+    .expect("Failed to get timestamp");
 
     if (date2 < date1) {
         return Err("jwt.created is before current date.".into());
@@ -338,7 +326,9 @@ pub async fn static_auth_verify(jwt: String, public_key: String) -> Result<Optio
     if (diff == 0) {
         return Err("Invalid date.".into());
     }
-    if (diff >= expiry) {
+
+    // If expiry is specified, enforce it.
+    if (expiry.is_none() == false && diff >= expiry.unwrap()) {
         return Err("JWT is expired.".into());
     }
 

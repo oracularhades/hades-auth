@@ -269,6 +269,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "frank_jwt"
+version = "3.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9febc9f09c7569636ba0e3d98a12addd6b11b3b3bc1d7baad06d52c60c1bbadd"
+dependencies = [
+ "base64 0.13.1",
+ "openssl",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "futures"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -405,15 +417,15 @@ dependencies = [
 
 [[package]]
 name = "hades_auth"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "base64 0.21.7",
  "domain",
+ "frank_jwt",
  "hex",
  "hex-literal",
  "jwt",
  "openssl",
- "oracularhades-mirror-frank_jwt",
  "rand",
  "regex",
  "reqwest",
@@ -813,18 +825,6 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
-]
-
-[[package]]
-name = "oracularhades-mirror-frank_jwt"
-version = "3.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5c669e951bdb555d05e226130b9dc36882a1fdc8b7d6906cbf39aaf2fd973c4c"
-dependencies = [
- "base64 0.13.1",
- "openssl",
- "serde",
- "serde_json",
 ]
 
 [[package]]
