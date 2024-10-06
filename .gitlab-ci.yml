@@ -14,4 +14,4 @@ build:
         - zip -r /builds/oracularhades/output .
     artifacts:
         paths:
-        - /builds/oracularhades/output.zip
+            - /builds/oracularhades/output.zip
