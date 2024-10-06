@@ -10,7 +10,7 @@ build:
         - cd target/package
         - find . -type f -name '*.crate' -delete
         - mkdir /builds/oracularhades/output
-        - tree
+        - tree /
         - mv /builds/oracularhades/hades-auth/rust/target/package/hades-auth* /builds/oracularhades/output
         - zip -r /builds/oracularhades/output.zip /builds/oracularhades/output
     artifacts:
