@@ -9,6 +9,7 @@ build:
         - cargo package
         - cd target/package
         - find . -type f -name '*.crate' -delete
+        - mkdir /builds/oracularhades/output
         - mv /builds/oracularhades/hades-auth* /builds/oracularhades/output
         - zip -r /builds/oracularhades/output .
     artifacts:
