@@ -9,9 +9,9 @@ build:
         - cargo package
         - cd target/package
         - find . -type f -name '*.crate' -delete
+        - tree
         - mv hades_auth* /builds/oracularhades/output
         - zip -r /builds/oracularhades/output .
-        - tree
     artifacts:
         paths:
         - /builds/oracularhades/output.zip
