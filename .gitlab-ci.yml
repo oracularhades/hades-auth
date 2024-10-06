@@ -11,7 +11,7 @@ build:
         - find . -type f -name '*.crate' -delete
         - mkdir /builds/oracularhades/output
         - tree /
-        - mv ./package/hades_auth* /builds/oracularhades/output
+        - mv hades_auth* /builds/oracularhades/output
         - zip -r /builds/oracularhades/output.zip /builds/oracularhades/output
     artifacts:
         paths:
