@@ -4,6 +4,7 @@ build:
     script:
         - apt-get update
         - apt install -y tree zip
+        - cd rust
         - cargo test
         - cargo package
         - cd target/package
