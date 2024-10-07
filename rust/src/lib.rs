@@ -16,6 +16,18 @@ mod structs;
 use crate::globals::{value_to_hashmap, VerifyJWT, is_null_or_whitespace, generate_random_id};
 use crate::structs::*;
 
+// These are publicly exported, used by clients, and should not be removed.
+#[derive(Debug, Deserialize, Clone)]
+pub struct Static_auth_sign {
+    pub created: i64,
+    pub additional_data: Option<Value>
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Signed_data_identifier {
+    pub device_id: String
+}
+
 // TODO: params:Value should be params: &Value
 // TODO: Sign() doesn't work.
 pub async fn Sign(params: Value, body: Option<&str>, private_key: &str, only_use_field_for_body: Option<&str>) -> Result<Sign_output, String> {
