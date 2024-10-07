@@ -3,15 +3,12 @@ build:
     image: rust:latest
     script:
         - apt-get update
-        - apt install -y tree zip
+        - apt install -y tree
         - cd rust
         - cargo test
         - cargo package
-        - cd target/package
-        - find . -type f -name '*.crate' -delete
-        - mkdir /builds/oracularhades/output
-        - mv /builds/oracularhades/hades-auth* /builds/oracularhades/output
-        - zip -r /builds/oracularhades/output .
+        - mv /builds/oracularhades/hades-auth/rust/target/package/hades_auth-*.crate /builds/oracularhades/hades-auth/hades-auth.crate
+        - tree /
     artifacts:
         paths:
-            - /builds/oracularhades/output.zip
+            - /builds/oracularhades/hades-auth/hades-auth.crate
