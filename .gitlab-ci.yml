@@ -7,7 +7,7 @@ build:
         - cd rust
         - cargo test
         - cargo package
-        - mv /builds/oracularhades/hades-auth/rust/target/package/hades_auth-*.crate /builds/oracularhades/hades-auth/hades-auth.crate
+        - mv /builds/oracularhades/hades-auth/rust/target/package/hades-auth-*.crate /builds/oracularhades/hades-auth/hades-auth.crate
         - tree /
     artifacts:
         paths:
