@@ -1,6 +1,6 @@
 [package]
-name = "hades_auth"
-description = "https://github.com/oracularhades/hades-auth"
+name = "hades-auth"
+description = "https://gitlab.com/oracularhades/hades-auth"
 license = "Apache-2.0"
 version = "0.1.6"
 edition = "2021"
